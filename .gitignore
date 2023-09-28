@@ -1,67 +1,139 @@
 import time
 import datetime
 import tkinter as tk
+import math
 
-root = tk.Tk
+class Clock:
+    def __init__(self, canvas):
+        self.canvas = canvas
 
-def start_timer(duration):
-    time.sleep(duration)
+    def draw_hand(self, value, length, width, color):
+        angle = math.radians(90 - (360 * value / 60))
+        x = 200 + length * math.cos(angle)
+        y = 200 - length * math.sin(angle)
+        self.canvas.create_line(200, 200, x, y, fill=color, width=width, arrow=tk.LAST)
 
-def print_with_dots(text, repetitions, delay):
-    for i in range(repetitions):
-        print(text, end="")
-        for _ in range(3):
-            time.sleep(delay)
-            print(".", end="", flush=True)
-        print("\r", end="", flush=True)
+    def draw_clock(self):
+        self.canvas.create_oval(50, 50, 350, 350, fill='white', outline='black')
 
-def study_timer():
-    daily_goal = int(input("What's your daily study goal (in minutes)? : ")) * 60
-    study_duration = 0
-    break_duration = 0
-    total_study_time = 0
-    daily_streak = 0
-    total_study_days = 0  # Counter for the total days studied
+        for i in range(60):
+            angle = math.radians(6 * i)
+            x1 = 200 + 140 * math.cos(angle)
+            y1 = 200 - 140 * math.sin(angle)
+            x2 = 200 + 150 * math.cos(angle)
+            y2 = 200 - 150 * math.sin(angle)
+            self.canvas.create_line(x1, y1, x2, y2, fill='black', width=2 if i % 5 == 0 else 1)
 
-    while True:
-        # Get the current date to check for a new day
-        today = datetime.date.today()
-
-        if daily_streak == 0 or daily_streak < today.toordinal():
-            # If it's a new day, reset the daily streak and total_study_time
-            daily_streak = today.toordinal()
-            total_study_time = 0
-
-        # Prompt for study duration
-        study_input = input("How long do you want to study for (in minutes)? Type 'stop' to end the session: ")
-
-        if study_input.lower() == "stop":
-            break
+    def update(self):
+        current_time = time.localtime()
+        greek_time = datetime.datetime.fromtimestamp(time.mktime(current_time)) 
+        if greek_time.hour > 1:
+            greek_hour = (greek_time.hour - 12) * 5
         else:
-            study_duration = int(study_input) * 60
-            print_with_dots("Study session begins...", repetitions=3, delay=1)
-            start_timer(study_duration)
-            total_study_time += study_duration
-            print("Study session ended. Total study time so far is {} minutes.".format(total_study_time // 60))
+            greek_hour = greek_time.hour * 5
 
-            if total_study_time >= daily_goal:
-                print("Congratulations! You've reached your daily study goal.")
-                daily_streak = today.toordinal()
-                total_study_days += 1  # Increment the total study days counter
-                break  # End the loop when the goal is achieved
+        minutes = greek_time.minute
+        seconds = greek_time.second
+        # print("check")
+        # print(minutes)
+        # print(seconds)
+        # input(greek_hour)
+        self.canvas.delete("all")
 
-        # Prompt for break duration
-        break_input = input("How long should the breaks be (in minutes)? Type 'stop' to end the session: ")
+        self.draw_clock()
+        self.draw_hand(greek_hour, 80, 6, "blue")
+        self.draw_hand(minutes, 110, 4, "green")
+        self.draw_hand(seconds, 140, 2, "red")
 
-        if break_input.lower() == "stop":
-            break
-        else:
-            break_duration = int(break_input) * 60
-            print_with_dots("Break time...", repetitions=3, delay=1)
-            start_timer(break_duration)
+class StudyTimer:
+    def __init__(self):
+        self.daily_streak = 0
+        self.total_study_time = 0
+        self.total_study_days = 0
 
-    print("Total days studied:", total_study_days)
-    print("Thank you for using the study timer. Great work!")
+    def start_timer(self, duration):
+        time.sleep(duration)
 
-study_timer()
+    def print_with_dots(self, text, repetitions, delay):
+        for i in range(repetitions):
+            print(text, end="")
+            for _ in range(3):
+                time.sleep(delay)
+                print(".", end="", flush=True)
+            print("\r", end="", flush=True)
 
+    def run(self):
+        daily_goal = int(input("What's your daily study goal (in minutes)? : ")) * 60
+        study_duration = 0
+        break_duration = 0
+
+        while True:
+            today = datetime.date.today()
+
+            if self.daily_streak == 0 or self.daily_streak < today.toordinal():
+                self.daily_streak = today.toordinal()
+                self.total_study_time = 0
+
+            while True:
+                study_input = input("How long do you want to study for (in minutes)? Type 'stop' to end the session: ")
+
+                if study_input.lower() == "stop":
+                    break
+
+                try:
+                    study_duration = int(study_input) * 60
+
+                    if study_duration <= 0:
+                        print("Please enter a valid number:")
+                    else:
+                        self.print_with_dots("Study session begins...", repetitions=3, delay=1)
+                        self.start_timer(study_duration)
+                        self.total_study_time += study_duration
+                        print("Study session ended. Total study time so far is {} minutes.".format(self.total_study_time // 60))
+
+                    if self.total_study_time >= daily_goal:
+                        print("Congratulations! You've reached your daily study goal.")
+                        self.daily_streak = today.toordinal()
+                        self.total_study_days += 1
+                        break
+
+                    
+                except ValueError:
+                    print("Invalid input. Please enter a valid input.")
+
+            break_input = input("How long should the breaks be (in minutes)? Type 'stop' to end the session: ")
+
+            if break_input.lower() == "stop":
+                break
+            else:
+                break_duration = int(break_input) * 60
+                self.print_with_dots("Break time...", repetitions=3, delay=1)
+                self.start_timer(break_duration)
+
+        print("Total days studied:", self.total_study_days)
+        print("Thank you for using the study timer. Great work!")
+
+class StudyTimerApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Study Timer")
+
+        self.study_timer = StudyTimer()
+        self.clock_canvas = tk.Canvas(self.root, width=400, height=400, bg='white')
+        self.clock_canvas.pack()
+
+        self.clock = Clock(self.clock_canvas)
+
+        self.study_button = tk.Button(self.root, text="Start Study Timer", command=self.study_timer.run)
+        self.study_button.pack()
+
+        self.update_clock()
+
+    def update_clock(self):
+        self.clock.update()
+        self.root.after(1000, self.update_clock)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = StudyTimerApp(root)
+    root.mainloop()
