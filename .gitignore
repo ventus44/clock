@@ -2,6 +2,7 @@ import time
 import datetime
 import tkinter as tk
 import math
+import sys
 
 class Clock:
     def __init__(self, canvas):
@@ -78,13 +79,21 @@ class StudyTimer:
                 study_input = input("How long do you want to study for (in minutes)? Type 'stop' to end the session: ")
 
                 if study_input.lower() == "stop":
-                    break
+                    restart = input("You stopped the program. Type 'start' to begin again or any other key to exit: ")
+                    if restart.lower() == "start":
+                        break
+                    else:
+                        print("Thank you for using the study timer. Come back again later !")
+                        sys.exit()
+                        
+                         
+                        
 
                 try:
                     study_duration = int(study_input) * 60
 
                     if study_duration <= 0:
-                        print("Please enter a valid number:")
+                        print("Please enter a valid number!")
                     else:
                         self.print_with_dots("Study session begins...", repetitions=3, delay=1)
                         self.start_timer(study_duration)
@@ -104,7 +113,7 @@ class StudyTimer:
             break_input = input("How long should the breaks be (in minutes)? Type 'stop' to end the session: ")
 
             if break_input.lower() == "stop":
-                break
+               break
             else:
                 break_duration = int(break_input) * 60
                 self.print_with_dots("Break time...", repetitions=3, delay=1)
